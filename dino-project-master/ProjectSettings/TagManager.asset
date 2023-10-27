@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Logic
+  - Manager
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - Player
+  - Water
+  - UI
+  - Ground
+  - Enemy
+  - Transition
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 2716023173
+    locked: 0
+  - name: Foggy trees
+    uniqueID: 3348594881
+    locked: 0
+  - name: God Rays
+    uniqueID: 4126638991
+    locked: 0
+  - name: Big Trees
+    uniqueID: 2234652033
+    locked: 0
+  - name: Fog
+    uniqueID: 2159907955
+    locked: 0
+  - name: Grass
+    uniqueID: 3220436467
+    locked: 0
+  - name: Ground
+    uniqueID: 3949037617
+    locked: 0
+  - name: Foods
+    uniqueID: 2016642471
+    locked: 0
+  - name: Player & enemy
+    uniqueID: 4283461515
+    locked: 0
+  - name: UI
+    uniqueID: 3277505887
+    locked: 0
+  - name: Transition
+    uniqueID: 2209758707
+    locked: 0
