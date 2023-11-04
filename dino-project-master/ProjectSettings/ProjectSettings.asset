@@ -785,8 +785,8 @@ PlayerSettings:
   luminVersion:
     m_VersionCode: 1
     m_VersionName: 
-  apiCompatibilityLevel: 6
-  activeInputHandler: 0
+  apiCompatibilityLevel: 3
+  activeInputHandler: 2
   windowsGamepadBackendHint: 0
   cloudProjectId: c1bb4c18-6876-431d-ad9c-e42c3050428a
   framebufferDepthMemorylessMode: 0
