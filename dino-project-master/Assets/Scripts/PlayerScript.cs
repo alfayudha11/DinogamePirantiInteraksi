@@ -10,8 +10,9 @@ public class PlayerScript : MonoBehaviour {
     private float _lastArduinoValueX;
     private float _lastArduinoValueY;
     private float _lastArduinoValueZ;
-
     private const float _selisih = 0.02f;
+
+    private UDPDataReceiver _udpDataReceiver;
 
     public Rigidbody2D rb;
     public float jumpPower = 10;
@@ -27,71 +28,91 @@ public class PlayerScript : MonoBehaviour {
 
     private void Awake() {
         jumpLimit = PlayerPrefs.GetInt(PLAYER_JUMP_COUNT);
-        _arduinoCommunication = GetComponent<ArduinoCommunication>();
+        _udpDataReceiver = UDPDataReceiver.Instance;
+        if(_udpDataReceiver == null) Debug.LogWarning("No UDPDataReceiver");
     }
 
     private void Start()
     {
-        _lastArduinoValueX = _arduinoCommunication.ParseArduino('x');
-        _lastArduinoValueY = _arduinoCommunication.ParseArduino('y');
-        _lastArduinoValueZ = _arduinoCommunication.ParseArduino('z');
+        _arduinoCommunication = GetComponent<ArduinoCommunication>();
+
+        if(_arduinoCommunication._isReady)
+        {
+            _lastArduinoValueX = _arduinoCommunication.ParseArduino('x');
+            _lastArduinoValueY = _arduinoCommunication.ParseArduino('y');
+            _lastArduinoValueZ = _arduinoCommunication.ParseArduino('z');
+        }
     }
 
-    private void FixedUpdate() {
-        if ((jumpCount < jumpLimit) && 
-            ((Input.GetKeyDown(KeyCode.Space) || (Input.touchCount > 0 && Input.touches[0].phase == TouchPhase.Began))) && 
-            Time.timeScale > 0 && 
-            !isDead) {
-                // if (EventSystem.current.IsPointerOverGameObject(Input.touches[0].fingerId)) {
-                //     return;
-                // }
+    private void FixedUpdate()
+    {
+        #region HandtrackingController
+        int tempHandCount = _udpDataReceiver.handTrackingControlManager.GetHandCount();
+        if(tempHandCount > 0)
+        {
+            if(tempHandCount >= 2)
+            {
                 Jump();
+                
+                Jump();
+
+                return;
+            }
+
+            Jump();
+
+            return;
+        }
+        #endregion
+    }
+
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.Escape)) {
+            gameManager.PauseGame();
+        }
+
+        if(Input.GetKeyDown(KeyCode.Space) || (Input.touchCount > 0 && Input.touches[0].phase == TouchPhase.Began))
+        {
+            Jump();
+            return;
+        }
+
+
+        #region  ArduinoController
+        if(!_arduinoCommunication._isReady)
+        {
+            return;
         }
         
         float x = _arduinoCommunication.ParseArduino('x');
         float y = _arduinoCommunication.ParseArduino('y');
         float z = _arduinoCommunication.ParseArduino('z');
 
-        // StartCoroutine(jumpIEnumerator(y));
+        
 
-        if ((jumpCount < jumpLimit) && (
+        if (
             (Mathf.Abs(Mathf.Abs(x) - Mathf.Abs(_lastArduinoValueX)) >= _selisih) || 
             (Mathf.Abs(Mathf.Abs(y) - Mathf.Abs(_lastArduinoValueY)) >= _selisih) || 
-            (Mathf.Abs(Mathf.Abs(z) - Mathf.Abs(_lastArduinoValueZ)) >= _selisih))
-        && Time.timeScale > 0 && !isDead) 
+            (Mathf.Abs(Mathf.Abs(z) - Mathf.Abs(_lastArduinoValueZ)) >= _selisih)
+           )
         {
             Jump();
             _lastArduinoValueX = x;
             _lastArduinoValueY = y;
             _lastArduinoValueZ = z;
         }
-
-        if (Input.GetKeyDown(KeyCode.Escape)) {
-            gameManager.PauseGame();
-        }
+        #endregion   
     }
 
-    // private IEnumerator jumpIEnumerator(float y)
-    // {
-    //     // Debug.Log("kontol");
-    //     yield return new WaitForSeconds(0.5f);
-
-    //     // Debug.Log("masih kontol");
-
-
-    //     if ((jumpCount < jumpLimit) && Mathf.Abs(y - _lastArduinoValue) > 0.3f && Time.timeScale > 0 && !isDead) 
-    //     {
-    //         // Debug.Log("kontol lagi");
-
-    //         Jump();
-    //         _lastArduinoValue = y;
-    //     }
-    // }
-
-    private void Jump() {
-        rb.velocity = Vector2.up * jumpPower;
-        jumpCount++;
-        GameManager.PlaySound(GameManager.Sound.Jump);
+   
+    private void Jump() 
+    {
+        if((jumpCount < jumpLimit) && Time.timeScale > 0 && !isDead) 
+        {
+            rb.velocity = Vector2.up * jumpPower;
+            jumpCount++;
+            GameManager.PlaySound(GameManager.Sound.Jump);
+        }
     }
 
     public void ResetJump() {

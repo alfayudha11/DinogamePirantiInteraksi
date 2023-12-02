@@ -3,42 +3,58 @@ using System.IO.Ports;
 
 public class ArduinoCommunication : MonoBehaviour
 {
-    private string _portName = "COM3"; // Change this to match your Arduino's port
     private int _baudRate = 9600;
-
+    public bool _isReady { get; private set; }
     private SerialPort _serialPort;
 
     private void Awake()
     {
-        // Get a list of available COM ports
+        // Debug.Log("arduino awaken");
+        SearchAndOpenPort();
+    }
+
+    private void SearchAndOpenPort()
+    {
         string[] ports = SerialPort.GetPortNames();
+
+        // Debug.Log("Available Ports:");
+        // foreach (string port in ports)
+        // {
+        //     Debug.Log(port);
+        // }
 
         foreach (string port in ports)
         {
-            // Try opening each port and check if it's your Arduino
-            _serialPort = new SerialPort(port, 9600); // Use the correct baud rate
+            _serialPort = new SerialPort(port, _baudRate);
 
             try
             {
                 _serialPort.Open();
-                string signature = _serialPort.ReadLine();
+                string data = _serialPort.ReadLine().Trim(); // Remove leading/trailing whitespace
+
+                // Split the data into X, Y, and Z values
+                string[] values = data.Split(' ');
+                
+                string signature = values[0];
                 _serialPort.Close();
 
-                if (signature.Contains("ArduinoSignature")) // Replace with your Arduino's signature
+                if (signature.Contains("ArduinoSignature"))
                 {
                     Debug.Log("Arduino found on port: " + port);
-                    // Now you know which COM port to use
-                    // You can store this port in a variable or PlayerPrefs for later use
-                    break;
+                    _serialPort = new SerialPort(port, _baudRate);
+                    _serialPort.Open();
+                    _isReady = true;
+                    return;
                 }
             }
             catch (System.Exception e)
             {
-                // Handle errors when opening the port
+                _isReady = false;
                 Debug.LogWarning("Error opening " + port + ": " + e.Message);
             }
         }
     }
+
 
     private void OnApplicationQuit()
     {
@@ -55,24 +71,18 @@ public class ArduinoCommunication : MonoBehaviour
 
     public float ParseArduino(char axis)
     {
-        if(_serialPort == null)
-        {
-            _serialPort = new SerialPort(_portName, _baudRate);
-            _serialPort.Open();
-            Debug.Log("serialPort is null");
-        }
-        
-        if (_serialPort.IsOpen)
+        if (_isReady)
         {
             string data = _serialPort.ReadLine().Trim(); // Remove leading/trailing whitespace
 
             // Split the data into X, Y, and Z values
             string[] values = data.Split(' ');
             
-            if (values.Length == 3 &&
-                float.TryParse(values[0], out float xValue) &&
-                float.TryParse(values[1], out float yValue) &&
-                float.TryParse(values[2], out float zValue))
+            if (values.Length == 4 &&
+                // float.TryParse(values[0], out float xValue) &&
+                float.TryParse(values[1], out float xValue) &&
+                float.TryParse(values[2], out float yValue) &&
+                float.TryParse(values[3], out float zValue))
             {
                 if(axis == 'x')
                 {
@@ -97,6 +107,10 @@ public class ArduinoCommunication : MonoBehaviour
                 Debug.LogWarning("Data is not in the expected format: " + data);
                 return -1;
             }
+        }
+        else
+        {
+            Debug.Log("no arduino");
         }
 
         return -1;
