@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -46,23 +47,23 @@ public class PlayerScript : MonoBehaviour {
 
     private void FixedUpdate()
     {
+        if(_udpDataReceiver == null)
+        {
+            return;
+        }
+        
         #region HandtrackingController
         int tempHandCount = _udpDataReceiver.handTrackingControlManager.GetHandCount();
         if(tempHandCount > 0)
         {
-            if(tempHandCount >= 2)
-            {
-                Jump();
-                
-                Jump();
-
-                return;
-            }
-
             Jump();
-
-            return;
         }
+        else if(tempHandCount >= 2)
+        {
+            StartCoroutine("DoubleJump");
+        }
+
+        return;
         #endregion
     }
 
@@ -113,6 +114,13 @@ public class PlayerScript : MonoBehaviour {
             jumpCount++;
             GameManager.PlaySound(GameManager.Sound.Jump);
         }
+    }
+
+    private IEnumerator DoubleJump()
+    {
+        Jump();
+        yield return new WaitForSeconds(0.1f);
+        Jump();
     }
 
     public void ResetJump() {

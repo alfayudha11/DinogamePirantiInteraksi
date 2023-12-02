@@ -10,50 +10,107 @@ public class ArduinoCommunication : MonoBehaviour
     private void Awake()
     {
         // Debug.Log("arduino awaken");
+        // _isReady = false;
         SearchAndOpenPort();
     }
 
+    // private void SearchAndOpenPort()
+    // {
+    //     string[] ports = SerialPort.GetPortNames();
+
+    //     // Debug.Log("Available Ports:");
+    //     // foreach (string port in ports)
+    //     // {
+    //     //     Debug.Log(port);
+    //     // }
+
+    //     foreach (string port in ports)
+    //     {
+    //         _serialPort = new SerialPort(port, _baudRate);
+
+    //         try
+    //         {
+    //             _serialPort.Open();
+    //             string data = _serialPort.ReadLine().Trim(); // Remove leading/trailing whitespace
+
+    //             // Split the data into X, Y, and Z values
+    //             string[] values = data.Split(' ');
+                
+    //             string signature = values[0];
+    //             _serialPort.Close();
+
+    //             if (signature.Contains("ArduinoSignature"))
+    //             {
+    //                 Debug.Log("Arduino found on port: " + port);
+    //                 _serialPort = new SerialPort(port, _baudRate);
+    //                 _serialPort.Open();
+    //                 _isReady = true;
+    //                 return;
+    //             }
+    //         }
+    //         catch (System.Exception e)
+    //         {
+    //             _isReady = false;
+    //             Debug.LogWarning("Error opening " + port + ": " + e.Message);
+    //         }
+    //     }
+    // }
     private void SearchAndOpenPort()
     {
         string[] ports = SerialPort.GetPortNames();
+        int maxAttempts = 1;
+        int attempts = 0;
 
-        // Debug.Log("Available Ports:");
-        // foreach (string port in ports)
-        // {
-        //     Debug.Log(port);
-        // }
-
-        foreach (string port in ports)
+        while (attempts < maxAttempts)
         {
-            _serialPort = new SerialPort(port, _baudRate);
-
-            try
+            foreach (string port in ports)
             {
-                _serialPort.Open();
-                string data = _serialPort.ReadLine().Trim(); // Remove leading/trailing whitespace
-
-                // Split the data into X, Y, and Z values
-                string[] values = data.Split(' ');
-                
-                string signature = values[0];
-                _serialPort.Close();
-
-                if (signature.Contains("ArduinoSignature"))
+                try
                 {
-                    Debug.Log("Arduino found on port: " + port);
                     _serialPort = new SerialPort(port, _baudRate);
+                    _serialPort.ReadTimeout = 1000; // Set a read timeout
                     _serialPort.Open();
-                    _isReady = true;
-                    return;
+                    string data = _serialPort.ReadLine().Trim();
+
+                    // Check for Arduino signature and handle accordingly
+                    // Split the data into X, Y, and Z values
+                    string[] values = data.Split(' ');
+                    
+                    string signature = values[0];
+                    _serialPort.Close();
+
+                    if (signature.Contains("ArduinoSignature"))
+                    {
+                        Debug.Log("Arduino found on port: " + port);
+                        _serialPort.Close();
+                        _serialPort = new SerialPort(port, _baudRate);
+                        _serialPort.Open();
+                        _isReady = true;
+                        return;
+                    }
+                    else
+                    {
+                        _serialPort.Close();
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    _isReady = false;
+                    Debug.LogWarning("Error opening " + port + ": " + e.Message);
+                    if (_serialPort != null && _serialPort.IsOpen)
+                    {
+                        _serialPort.Close();
+                    }
                 }
             }
-            catch (System.Exception e)
-            {
-                _isReady = false;
-                Debug.LogWarning("Error opening " + port + ": " + e.Message);
-            }
+
+            attempts++;
         }
+
+        Debug.LogWarning("Arduino not found after " + maxAttempts + " attempts.");
+        _isReady = false;
     }
+
 
 
     private void OnApplicationQuit()

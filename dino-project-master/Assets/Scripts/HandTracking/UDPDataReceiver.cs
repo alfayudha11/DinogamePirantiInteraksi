@@ -24,7 +24,10 @@ public class UDPDataReceiver : MonoBehaviour
     void Awake()
     {
         if (Instance != null && Instance != this)
+        {
             Destroy(this);
+            return;
+        }
         else
         {
             Instance = this;
@@ -72,7 +75,7 @@ public class UDPDataReceiver : MonoBehaviour
                         int handPresence = Convert.ToInt32(receivedData);
 
                         handTrackingControlManager.SetHandCount(handPresence); 
-                        // Debug.Log("HandCount: " + handPresence);
+                        Debug.Log("HandCount: " + handPresence);
                     }
                 }
             }
